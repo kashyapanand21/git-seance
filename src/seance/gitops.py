@@ -21,3 +21,9 @@ def run_git(args: list[str], cwd: Path) -> str:
     if result.returncode != 0:
         raise GitError(f"git {' '.join(args)} failed: {result.stderr.strip()}")
     return result.stdout
+
+
+
+def commit_message(cwd: Path, sha: str) -> str:
+    # %B = raw body: subject plus message, exactly as written
+    return run_git(["log", "-1", "--format=%B", sha], cwd).strip()

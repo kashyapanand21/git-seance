@@ -15,4 +15,4 @@ build/
 *.gguf
 *.bin
 runs/
-.fence-cache/
+.seance-cache/

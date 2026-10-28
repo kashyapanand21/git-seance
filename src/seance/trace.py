@@ -80,7 +80,9 @@ def log_l(cwd: Path, hunk: Hunk, rev: str) -> str | None:
 
 def trace_hunk(cwd: Path, hunk: Hunk, rev: str) -> Origin | None:
     """Return the commit that introduced the removed lines, or None if untraceable."""
-    steps = [("blame", blame_origin), ("log-S", pickaxe_s), ("log-G", pickaxe_g), ("log-L", log_l)]
+    # log -L is deliberately not in this chain: it walks back to the file's first commit,
+    # which would be a confident wrong origin (see MISTAKES.md, P2).
+    steps = [("blame", blame_origin), ("log-S", pickaxe_s), ("log-G", pickaxe_g)]
     for method, finder in steps:
         try:
             sha = finder(cwd, hunk, rev)
