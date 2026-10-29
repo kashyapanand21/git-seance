@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from collections.abc import Callable
 from pathlib import Path
 
 import typer
@@ -9,14 +10,24 @@ from seance.diff import removed_hunks
 from seance.evidence import build_bundle
 from seance.github import GitHubClient
 from seance.gitops import commit_message
+from seance.llm import LLMResult, summarise
 from seance.render import render_comment
 from seance.score import score_bundle
 from seance.trace import merge_base, trace_hunk
+from seance.verify import verify
+from seance.evidence import Bundle, build_bundle
 
 app = typer.Typer(add_completion=False, help="Summon the reason a line of code was written.")
 
 
-def run(cwd: Path, base: str, head: str, settings: Settings, gh: GitHubClient) -> str | None:
+def run(
+    cwd: Path,
+    base: str,
+    head: str,
+    settings: Settings,
+    gh: GitHubClient,
+    summarise_fn: Callable[[Bundle], LLMResult] | None = None,  # None = no model (v0.1 mode)
+) -> str | None:
     rev = merge_base(cwd, base, head)
     findings = []
     for hunk in removed_hunks(cwd, base, head):
@@ -27,7 +38,13 @@ def run(cwd: Path, base: str, head: str, settings: Settings, gh: GitHubClient) -
         bundle = build_bundle(origin, message, gh.context_for(origin.sha, message), settings.repo)
         score = score_bundle(bundle)
         if score.worth_warning:
-            findings.append((bundle, score))
+            verified = None
+            if summarise_fn is not None:
+                result = summarise_fn(bundle)
+                # Model failed twice -> verified stays None -> raw evidence only
+                if result.summary is not None:
+                    verified = verify(result.summary, bundle)
+            findings.append((bundle, score, verified))
     return render_comment(findings)
 
 
