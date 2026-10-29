@@ -15,3 +15,9 @@
 - **What:** `gemma4:e4b` and `gemma3:12b` returned HTTP 500 (`CUDA error: shared object initialization failed`, exit 0xc0000409). My first guess (curl quoting) was wrong.
 - **Why (likely, not proven):** RTX 4050 has 6 GB VRAM; both crashing models are larger. `qwen2.5:3b` fits and worked.
 - **Fix:** `SEANCE_NUM_GPU=0` forces CPU. gemma4:e4b also "thinks" by default, so we send `think: false`.
+
+## 2026-10-29: P7b misplaced `fn` assignment
+
+- **What:** `UnboundLocalError: fn` when running the real CLI.
+- **Why:** The `fn = ...` line was applied one indent too deep, under the `raise typer.Exit(2)`, so it never ran. Unit tests call `run()` directly and never exercised `main()`.
+- **Fix:** De-indent the line. Lesson: add a test that invokes `main` through typer's `CliRunner`.
