@@ -1,7 +1,12 @@
 # import json  # noqa: E402  (keep with the other imports if you prefer)
 
 
-from seance.cli import run
+from typer.testing import CliRunner  # noqa: E402
+
+from seance.cli import (
+    app,  # noqa: E402
+    run,
+)
 from seance.config import Settings
 from seance.github import GitHubClient
 from seance.llm import Claim, LLMResult, Summary  # noqa: E402
@@ -62,3 +67,17 @@ def test_model_failure_falls_back_to_raw_evidence(repo, tmp_path):
     fail = lambda bundle: LLMResult(summary=None, error="boom")  # noqa: E731
     out = run(repo.path, "main", "feature", SETTINGS, _gh(tmp_path), fail)
     assert out is not None and "Quote:" not in out
+
+
+def test_main_runs_end_to_end_without_model(repo):
+    _fence_repo(repo)
+    result = CliRunner().invoke(
+        app, ["--base", "main", "--head", "feature", "--repo-dir", str(repo.path), "--no-model"]
+    )
+    assert result.exit_code == 0
+    assert "<!-- git-seance -->" in result.output
+
+
+def test_main_without_refs_exits_2():
+    result = CliRunner().invoke(app, [])
+    assert result.exit_code == 2
