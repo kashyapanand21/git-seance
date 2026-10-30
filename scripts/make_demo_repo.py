@@ -27,6 +27,12 @@ def main(target: Path) -> None:
 
     commit(target, "feat: add charge helper", {
         "charge.py": "def charge(gateway, amount):\n    return gateway.post(amount)\n",
+        "README.md": (
+            "# seance-demo\n\n"
+            "A tiny repo used to demo [git-seance](https://github.com/kashyapanand21/git-seance).\n\n"
+            "- PR #2 deletes a retry guard that was added to fix a real bug. The bot warns.\n"
+            "- PR #3 deletes an unused variable. The bot stays silent.\n"
+        ),
     })
     commit(target, "fix: retry once on 502 to stop duplicate charges (fixes #1)", {
                 "charge.py": (
