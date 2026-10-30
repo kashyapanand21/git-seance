@@ -1,0 +1,36 @@
+name: git-seance
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  seance:
+    # Same-repo PRs only; fork PRs are skipped (not failed) in v1
+    if: github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: self-hosted
+    timeout-minutes: 10
+    env:
+      SEANCE_MODEL: gemma4:e4b
+      SEANCE_NUM_GPU: "0"
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # blame and log need full history
+      - name: Check Ollama is up
+        shell: pwsh
+        run: |
+          try { Invoke-RestMethod http://localhost:11434/api/tags | Out-Null }
+          catch { Write-Error "Ollama is not running on this runner"; exit 1 }
+      - name: Install
+        shell: pwsh
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -e .
+      - name: Run git-seance
+        shell: pwsh
+        run: git-seance --pr ${{ github.event.pull_request.number }} --post

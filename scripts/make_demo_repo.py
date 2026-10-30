@@ -28,8 +28,8 @@ def main(target: Path) -> None:
     commit(target, "feat: add charge helper", {
         "charge.py": "def charge(gateway, amount):\n    return gateway.post(amount)\n",
     })
-    commit(target, "fix: retry once on 502 to stop duplicate charges (bug)", {
-        "charge.py": (
+    commit(target, "fix: retry once on 502 to stop duplicate charges (fixes #1)", {
+                "charge.py": (
             "def charge(gateway, amount):\n"
             "    resp = gateway.post(amount)\n"
             "    if resp.status == 502:  # gateway timed out\n"
