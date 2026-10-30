@@ -26,7 +26,8 @@ def render_finding(bundle: Bundle, score: Score, verified: Verified | None = Non
     if verified and verified.claims:
         lines.append("- What that history says (each point checked against the quoted text):")
         for c in verified.claims:
-            lines.append(f'  - {c.text} Quote: "{c.quote}" [{", ".join(c.evidence)}]')
+            quote = c.quote.replace("`", "'")  # a code span can't contain backticks
+            lines.append(f"  - {c.text} Quote: `{quote}` [{', '.join(c.evidence)}]")
     names = ", ".join(s.name for s in score.signals)
     lines.append(f"- Signals: {names}. This may reintroduce an earlier problem; please check.")
     return "\n".join(lines)

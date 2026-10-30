@@ -89,3 +89,6 @@ def test_claims_are_capped():
 def test_long_claim_text_is_truncated():
     v = run(claim(text="x" * 500))
     assert len(v.claims[0].text) == MAX_CLAIM_TEXT
+
+def test_sanitize_neutralises_issue_references():
+    assert sanitize("fixes #12 and PR #3", 300) == "fixes # 12 and PR # 3"

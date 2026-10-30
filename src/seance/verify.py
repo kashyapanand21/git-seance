@@ -18,7 +18,7 @@ MD_LINK_RE = re.compile(r"\[([^\]]*)\]\([^)]*\)")
 URL_RE = re.compile(r"https?://\S+|www\.\S+")
 HTML_RE = re.compile(r"<[^>]*>")
 MENTION_RE = re.compile(r"@(?=\w)")  # removing the @ stops GitHub notifying the user
-
+HASH_RE = re.compile(r"#(?=\d)")  # "#12" would become a cross-reference link on GitHub
 
 @dataclass
 class Dropped:
@@ -41,6 +41,7 @@ def sanitize(text: str, limit: int) -> str:
     text = URL_RE.sub("", text)
     text = HTML_RE.sub("", text)
     text = MENTION_RE.sub("", text)
+    text = HASH_RE.sub("# ", text)
     return norm(text)[:limit]
 
 

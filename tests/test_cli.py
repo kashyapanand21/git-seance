@@ -53,8 +53,7 @@ def _fence_repo(repo):
 def test_verified_claim_appears_in_comment(repo, tmp_path):
     _fence_repo(repo)
     out = run(repo.path, "main", "feature", SETTINGS, _gh(tmp_path), _fixed("retry once on 502"))
-    assert 'Quote: "retry once on 502"' in out and "[E1]" in out
-
+    assert "Quote: `retry once on 502`" in out and "[E1]" in out
 
 def test_invented_quote_falls_back_to_raw_evidence(repo, tmp_path):
     _fence_repo(repo)
