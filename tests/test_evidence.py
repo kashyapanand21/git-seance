@@ -25,3 +25,8 @@ def test_ids_urls_and_order():
 def test_no_repo_no_context_gives_commit_only():
     b = build_bundle(Origin(SHA, "blame", HUNK), "fix: retry guard", Context(), None)
     assert len(b.items) == 1 and b.items[0].url is None
+
+def test_issue_without_pr_is_still_included():
+    ctx = Context(issues=[Issue(number=1, title="Dup charges", body="Twice.", url="https://x/i/1")])
+    b = build_bundle(Origin(SHA, "blame", HUNK), "fix: x (fixes #1)", ctx, "o/r")
+    assert [e.kind for e in b.items] == ["commit", "issue"]

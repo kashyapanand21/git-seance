@@ -1,4 +1,3 @@
-
 # MISTAKES.md
 
 Every failure: what happened, why, the fix.
@@ -51,8 +50,9 @@ Every failure: what happened, why, the fix.
 - **Why:** GitHub autolinks `#<number>` in comments, and sanitising only stripped URLs, `@mentions` and HTML. Model text containing `#123` could create cross-reference notices on real issues.
 - **Fix:** Quotes are shown in a code span, and `#<digits>` is neutralised in all model text.
 
-## 2026-10-31: issue evidence missing from the first live comment
 
-- **What:** The comment listed only E1 (commit); the linked issue #1 was absent.
-- **Why:** Not yet confirmed. Suspected: the token lacked the Issues permission, and GitHub errors degrade quietly by design.
-- **Fix:** Status noted here once the `curl` check is done.
+## 2026-10-31: issue evidence missing from the live comment
+
+- **What:** The comment listed only E1 (commit); linked issue #1 was missing though `context_for` found it.
+- **Why:** The `for issue in ctx.issues` loop in `build_bundle` was indented under `if ctx.pr:` after an edit, so issues were only included when a PR existed. My earlier guesses (token, regex, stale cache) were wrong. Tests missed it because every test supplied a PR.
+- **Fix:** De-indent the loop; add a test with an issue and no PR.

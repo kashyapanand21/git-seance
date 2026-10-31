@@ -50,8 +50,8 @@ def build_bundle(origin: Origin, message: str, ctx: Context, repo: str | None) -
     if ctx.pr:
         pr = ctx.pr
         add("pr", f"PR #{pr.number}: {pr.title}", f"{pr.title}\n\n{pr.body}", pr.url)
-        for issue in ctx.issues:
-            label = f"Issue #{issue.number}: {issue.title}"
+    for issue in ctx.issues:  # outside the `if`: issues exist even when no PR does
+        label = f"Issue #{issue.number}: {issue.title}"
         add("issue", label, f"{issue.title}\n\n{issue.body}", issue.url, issue.labels)
 
     h = origin.hunk
