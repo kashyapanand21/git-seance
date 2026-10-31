@@ -117,19 +117,34 @@ jobs:
       - run: git-seance --pr ${{ github.event.pull_request.number }} --post
 ```
 
-## Known limits
-
 - `git log -L` is not used: it walks back to the file's first commit, not the commit that
   added the lines (see `MISTAKES.md`).
+
+## Results (replay, gemma4:e4b on CPU)
+
+| Metric                                    | Result                       |
+| ----------------------------------------- | ---------------------------- |
+| Origin hit rate                           | 7/7                          |
+| Quiet on harmless deletions               | 3/3                          |
+| Planted injection leaked into the comment | 0/1                          |
+| Unsupported claims posted                 | 0 (enforced by the verifier) |
+| Claims proposed / dropped by the verifier | 7 / 0                        |
+| Slowest case                              | 30 s                         |
+
+Full per-case table: [`eval/report.md`](eval/report.md).
+
+## Known limits
+
 - A non-whitespace reformat commit that is not listed in `.git-blame-ignore-revs` can
   still win blame.
 - The verifier checks grounding, not intent. An accurately quoted injected sentence passes
   it. The limits are no tools, one action, sanitised output and fixed wording.
 - Squash merges collapse history; the PR text is then the main source of the reason.
 - Same-repo PRs only. Fork PRs are not supported.
-- **No replay evaluation yet.** There is no measured origin hit rate. The only live test is
-  the demo repo above.
 - GitHub responses are cached on disk and can go stale if a PR or issue is edited.
+- The replay (`python eval/replay.py`) uses 10 scripted cases in temporary repos, not real
+  public PRs, and runs in git-only mode. Treat the numbers below as a pipeline check, not a
+  benchmark.
 
 ## Develop
 

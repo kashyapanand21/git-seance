@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import time
 from collections.abc import Callable
 from pathlib import Path
 
@@ -16,7 +17,10 @@ from seance.llm import LLMResult, summarise
 from seance.render import render_comment
 from seance.score import score_bundle
 from seance.trace import merge_base, trace_hunk
+from seance.runlog import log_run
 from seance.verify import verify
+
+MAX_HUNKS = 10  # cap work per PR (R13)
 
 app = typer.Typer(add_completion=False, help="Summon the reason a line of code was written.")
 
@@ -31,7 +35,7 @@ def run(
 ) -> str | None:
     rev = merge_base(cwd, base, head)
     findings = []
-    for hunk in removed_hunks(cwd, base, head):
+    for hunk in removed_hunks(cwd, base, head)[:MAX_HUNKS]:
         origin = trace_hunk(cwd, hunk, rev)
         if origin is None:
             continue  # untraceable: stay silent rather than guess
@@ -70,8 +74,19 @@ def main(
     if not base or not head:
         typer.echo("Give --pr, or both --base and --head.", err=True)
         raise typer.Exit(2)
-    fn = None if no_model else (lambda bundle: summarise(bundle, settings))
-    comment = run(repo_dir, base, head, settings, gh, fn)
+    stats = {"model_calls": 0, "prompt_tokens": 0, "output_tokens": 0}
+
+    def fn(bundle):
+        result = summarise(bundle, settings)
+        stats["model_calls"] += 1
+        stats["prompt_tokens"] += result.prompt_tokens
+        stats["output_tokens"] += result.output_tokens
+        return result
+
+    started = time.monotonic()
+    comment = run(repo_dir, base, head, settings, gh, None if no_model else fn)
+    log_run({"seconds": round(time.monotonic() - started, 1), "model": settings.model,
+             "commented": comment is not None, **stats})  # R12: latency and tokens
     if not post:
         if comment:
             typer.echo(comment)  # silent run prints nothing and exits 0
